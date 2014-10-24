@@ -10,7 +10,7 @@ public class ShortestDelay {
 	private PriorityQueue<State> q;
 	
 	public ArrayList<String> search(Graph graph, String fromName, String toName){
-		ArrayList<String> expandedNode = new ArrayList<String>();
+		ArrayList<String> path = new ArrayList<String>();
 		
 		// INITIALISATION FOR ALL DIFFERENT COMPONENTS.
 		Comparator<State> comparator = new StateComparator();
@@ -56,11 +56,16 @@ public class ShortestDelay {
 				
 		}
 		
-		for (State state : visited){
-			expandedNode.add(state.getStateName());
+		path.add(visited.get(visited.size()-1).getStateName());
+		for (int j=visited.size()-1; j> 0; j-- ){
+
+			if(!path.contains(visited.get(j).getParent().getStateName()) 
+					&& visited.get(j).getStateName().equals(path.get(0))){
+				path.add(0, visited.get(j).getParent().getStateName());
+			}
 		}
 		
-		return expandedNode;
+		return path;
 	}
 	
 	

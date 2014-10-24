@@ -48,8 +48,8 @@ public class Main {
 		
 		SHPsearch searchSHP = new SHPsearch();
 		ShortestDelay searchShort = new ShortestDelay();
-		ArrayList<String> result = searchSHP.search(graph, "A", "D");
-		ArrayList<String> result2 = searchShort.search(graph, "A", "D");
+		ArrayList<String> result = searchSHP.search(graph, "A", "H");
+		ArrayList<String> result2 = searchShort.search(graph, "A", "H");
 		
 		for(String s : result){
 			System.out.println("test " + s);
