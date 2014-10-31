@@ -24,7 +24,7 @@ public class SHPsearch {
 		Node from = graph.findNode(fromName);
 		
 		
-		State startState = new State(from.getNodeName(), null, 0);
+		State startState = new State(from.getNodeName(), null, 0, 0);
 		q.add(startState);
 		
 		State currentState = null;
@@ -34,13 +34,13 @@ public class SHPsearch {
 			visited.add(currentState);
 			
 			ArrayList<Edge> toAddEdge = graph.findNode(currentState.getStateName()).getConnectedEdge();
-			System.out.println("==================>>CURRENT : " + currentState.getStateName());
+			//System.out.println("==================>>CURRENT : " + currentState.getStateName());
 			for (Edge currentEdge: toAddEdge){
 				String stateName = currentEdge.getEdgeToNode().getNodeName();
 				//System.out.println("STATE NAME : " + stateName);
 				int currentPropagation = 1 + currentState.getPropagationDelay();
 				//System.out.println("PROP DELAY : " + currentPropagation);
-				State newState = new State(stateName, currentState, currentPropagation);
+				State newState = new State(stateName, currentState, currentPropagation, 0);
 				
 				if(!isVisited(stateName)){
 					
@@ -73,8 +73,7 @@ public class SHPsearch {
 				path.add(0, visited.get(j).getParent().getStateName());
 			}
 		}
-		
-		
+
 		return path;
 	}
 	
