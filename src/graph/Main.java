@@ -44,9 +44,19 @@ public class Main {
 		} catch (FileNotFoundException e) {
 		}
 		
+
+		//System.out.println("the num node -> " + graph.getNumNode());
+		//graph.getEdgesDetail();
+		
+		//SHPsearch searchSHP = new SHPsearch();
+		//ShortestDelay searchShort = new ShortestDelay();
+		//ArrayList<String> result = searchSHP.search(graph, "A", "D");
+		//ArrayList<String> result2 = searchShort.search(graph, "A", "D");
+
 		// END OF MAKING GRAPH. 
 
 		// THE START OF SEARCH DEPENDING ON ALGOS AND TYPE. 
+
 		
 		// INITILISATION OF VARIABLE. 
 		ArrayList<ConnectionState> connections = new ArrayList<ConnectionState>();
