@@ -3,7 +3,9 @@ package graph;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
 public class Main {
@@ -183,7 +185,8 @@ public class Main {
 									}else{
 										
 										status = false;
-
+										totalHops -= path.size()-1;
+										pathDelay -= findPathDelay(graph, path);
 											 for(int j=0; j<backTrackPath.size()-1; j++){
 
 													Node fromB = backTrackPath.get(j);
@@ -252,12 +255,249 @@ public class Main {
 
 			}else{
 				
-			}
+				
+				// REBUILD THE ENTIRE WORKLOAD TO ACCOMODATE THE MULTIPLE PACKETS FROM A CONNECTION. 
+				PriorityQueue<Packet> q;
+				Comparator<Packet> comparator = new PacketComparator();
+				q = new PriorityQueue<Packet>(50, comparator);
+				
+				
+				while(s.hasNext() && s.hasNextLine()){
+					
+					String[] input = s.nextLine().split(" ");
+					// INITIALISATION FOR VARIABLES.
+					
+					String source = input[1];
+					String destination = input[2];
+					
+					double startTime = Double.parseDouble(input[0]) ;
+					double duration = Double.parseDouble(input[3]);
+					double stopTime = startTime + duration;
+					
+					int numPacket = (int) Math.ceil(duration*Double.parseDouble(args[4]));
+					int showRate = Integer.parseInt(args[4]);
+					
+					double calculateRate = Double.parseDouble(args[4]);
+					double conDuration = 1/calculateRate;
+					
+					double tempStartTime = 0;
+					double tempStopTime = 0;
+					
+					for (int i = 0; i< numPacket ; i++){
 
+						tempStartTime = startTime + (conDuration*i);
+						tempStopTime = tempStartTime + conDuration;
+
+						if(i == numPacket-1){
+							tempStopTime = stopTime;
+							
+						}
+						
+						
+						Packet p = new Packet(tempStartTime, tempStopTime, duration, source, destination);
+						
+						q.add(p);
+						
+						
+					}
+
+				}
+				
+				// END OF REBUILDING THE PACKETS FOR EACH CONNECTION. 
+				
+				
+				while(!q.isEmpty()){
+					Packet test = q.poll();
+					double startTime = test.getStartTime();
+					String source = test.getSourceName();
+					String destination = test.getDestinationName();
+					double duration = test.getDuration();
+					double stopTime = test.getStopTime();
+					double tempStartTime = startTime;
+					
+					//ITERATOR TESTING. 
+					
+							Iterator<ConnectionState> i = connections.iterator();
+							while (i.hasNext()) {
+							   ConnectionState cs = i.next(); // must be called before you can call i.remove()
+							   
+							   if(tempStartTime > cs.getStopTime()){
+								   
+								   ArrayList<String> pathTaken = cs.getConnectionPath();
+								   
+								   for(int j=0; j<pathTaken.size()-1; j++){
+										Node from = graph.findNode(pathTaken.get(j));
+										Node to = graph.findNode(pathTaken.get(j+1));
+										
+										// GET ALL THE EDGES FROM BOTH NODE. 
+										
+										ArrayList<Edge> connectedFromEdges = from.getConnectedEdge();
+										ArrayList<Edge> connectedToEdges = to.getConnectedEdge();
+										for (int k=0; k < connectedFromEdges.size(); k++){
+											
+											if(connectedFromEdges.get(k).getEdgeToNode().equals(to)){
+												
+												connectedFromEdges.get(k).minusCurrentConnection();
+
+												for (int m = 0; m <connectedToEdges.size(); m++){
+													
+													if(connectedToEdges.get(m).getEdgeToNode().equals(from)){
+														
+
+														connectedToEdges.get(m).minusCurrentConnection();
+													}
+												}
+												
+											}
+											
+										}
+								   }
+								   
+								   i.remove();
+							   }
+							   
+							}
+
+					// DETERMINE WHICH ALGO TO RUN FOR. 
+							
+					if(algorithm.equalsIgnoreCase("SHP")){
+								 searchSHP = new SHPsearch();
+								 path = searchSHP.search(graph, source, destination);
+					}else if (algorithm.equalsIgnoreCase("SDP")){
+								searchSDP = new ShortestDelay();
+								path = searchSDP.search(graph, source, destination);
+					}else if (algorithm.equalsIgnoreCase("LLP")){
+						searchLLP = new LeastLoaded();
+						path = searchLLP.search(graph, source, destination);
+						
+					}
+					
+					totalHops += path.size()-1;
+					pathDelay += findPathDelay(graph, path);
+					
+					boolean status = false;
+					
+					ArrayList<Node> backTrackPath = new ArrayList<Node>();
+
+					outerloop:
+					for (int z=0; z<path.size()-1; z++){
+
+						Node from = graph.findNode(path.get(z));
+						Node to = graph.findNode(path.get(z+1));
+						backTrackPath.add(from);
+
+						// TO ADD TO THE FROM SIDE OF EDGES. 
+						ArrayList<Edge> connectedFromEdges = from.getConnectedEdge();
+						ArrayList<Edge> connectedToEdges = to.getConnectedEdge();
+						
+						//System.out.println("THE FROM NODE IS " + from.getNodeName());
+						for(int x=0 ; x<connectedFromEdges.size(); x++){
+							
+							Edge currentFromEdge = connectedFromEdges.get(x);
+
+							if(currentFromEdge.getEdgeToNode().equals(to)){
+
+								if(currentFromEdge.getCurrentConnection() != currentFromEdge.getMaxConnection()){
+									currentFromEdge.addCurrentConnection();
+
+									status = true;
+									for(int n=0; n<connectedToEdges.size(); n++){
+										Edge currentToEdge = connectedToEdges.get(n);
+
+										if(currentToEdge.getEdgeToNode().equals(from)){
+											
+											currentToEdge.addCurrentConnection();
+						
+										}
+									}
+
+								}else{
+									
+									status = false;
+									totalHops -= path.size()-1;
+									pathDelay -= findPathDelay(graph, path);
+
+										 for(int j=0; j<backTrackPath.size()-1; j++){
+
+												Node fromB = backTrackPath.get(j);
+												Node toB = backTrackPath.get(j+1);
+												
+												// GET ALL THE EDGES FROM BOTH NODE. 
+												
+												ArrayList<Edge> connectedFromEdgesB = fromB.getConnectedEdge();
+												ArrayList<Edge> connectedToEdgesB = toB.getConnectedEdge();
+												for (int k=0; k < connectedFromEdgesB.size(); k++){
+													
+													if(connectedFromEdgesB.get(k).getEdgeToNode().equals(toB)){
+														
+														connectedFromEdgesB.get(k).minusCurrentConnection();
+
+														for (int m = 0; m <connectedToEdgesB.size(); m++){
+															
+															if(connectedToEdgesB.get(m).getEdgeToNode().equals(fromB)){
+																
+
+																connectedToEdgesB.get(m).minusCurrentConnection();
+															}
+														}
+														
+													}
+													
+												}
+										   }
+
+									break outerloop;
+								}
+								
+							}
+
+						}
+
+					}
+
+					if(status == true){
+						successPacket = successPacket + 1 ;// Math.ceil(duration*Double.parseDouble(args[4]));
+						ConnectionState con = new ConnectionState(path, stopTime);
+						connections.add(con);
+					}else{
+						
+						blockPacket = blockPacket + 1 ;//Math.ceil(duration*Double.parseDouble(args[4]));
+
+					}
+
+					totalPacket = totalPacket + 1;//+  Math.ceil(duration*Double.parseDouble(args[4]));
+					totalCon += 1;
+					
+				}
+				
+				failPercent = (blockPacket/totalPacket)*100;
+				successPercent = (successPacket/totalPacket)*100;
+				averageHops = totalHops / totalCon;
+				averageDelay = pathDelay / totalCon;
+				System.out.println("total number of virtual circuit requests: "+ totalCon);
+				System.out.println("total number of packets: "+ totalPacket);
+				System.out.println("number of successfully routed packets: "+ successPacket);
+				System.out.println("percentage of successfully routed packets: "+ round(successPercent,2));
+				System.out.println("number of blocked packets: "+ blockPacket);
+				System.out.println("percentage of blocked packets: "+ round(failPercent,2));
+				System.out.println("average number of hops per circuit: "+ round(averageHops,2));
+				System.out.println("average cumulative propagation delay per circuit: "+ round(averageDelay,2));
+					
+					
+					
+				}
+				
+				
+			
+		
 			s.close();
+			
+			
 		} catch (FileNotFoundException e) {
 		}
 
+		
+		
 		
 	}
 	
