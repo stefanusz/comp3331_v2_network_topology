@@ -20,7 +20,7 @@ public class ShortestDelay {
 		Node from = graph.findNode(fromName);
 		
 		
-		State startState = new State(from.getNodeName(), null, 0);
+		State startState = new State(from.getNodeName(), null, 0,0);
 		q.add(startState);
 		
 		State currentState = null;
@@ -28,15 +28,11 @@ public class ShortestDelay {
 		while(!q.isEmpty() && !isVisited(toName)){
 			currentState = q.poll();
 			visited.add(currentState);
-			System.out.println("current state "+ currentState.getStateName());
 			ArrayList<Edge> toAddEdge = graph.findNode(currentState.getStateName()).getConnectedEdge();
-			
 			for (Edge currentEdge: toAddEdge){
 				String stateName = currentEdge.getEdgeToNode().getNodeName();
-				System.out.println("current edge "+ currentEdge.getEdgeFromNode().getNodeName() + currentEdge.getEdgeToNode().getNodeName());
 				int currentPropagation = currentEdge.getPropagationDelay() + currentState.getPropagationDelay();
-				System.out.println("current propagation "+ currentPropagation);
-				State newState = new State(stateName, currentState, currentPropagation);
+				State newState = new State(stateName, currentState, currentPropagation,0);
 				
 				if(!isVisited(stateName)){
 					
